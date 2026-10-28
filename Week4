@@ -1,0 +1,50 @@
+import random
+
+def ACO_TSP(dist, ants=10, iterations=100, alpha=1, beta=2, rho=0.5, Q=100):
+    n = len(dist)
+    pheromone = [[1.0] * n for _ in range(n)]
+    best_tour, best_length = None, float('inf')
+
+    for _ in range(iterations):
+        tours = []
+
+        for _ in range(ants):
+            tour = [random.randrange(n)]
+            while len(tour) < n:
+                i = tour[-1]
+                cities = [j for j in range(n) if j not in tour]
+                weights = [pheromone[i][j]**alpha *
+                           (1/dist[i][j])**beta for j in cities]
+                tour.append(random.choices(
+                    cities, weights=weights)[0])
+
+            length = sum(dist[tour[i]][tour[(i+1) % n]]
+                         for i in range(n))
+            tours.append((tour, length))
+
+            if length < best_length:
+                best_tour, best_length = tour[:], length
+
+        # Evaporate pheromones
+        pheromone = [[p * (1-rho) for p in row]
+                     for row in pheromone]
+
+        # Deposit pheromones
+        for tour, length in tours:
+            for i in range(n):
+                a, b = tour[i], tour[(i+1) % n]
+                pheromone[a][b] += Q / length
+                pheromone[b][a] += Q / length
+
+    return best_tour, best_length
+
+
+# Example
+dist = [[0, 10, 15, 20],
+        [10, 0, 35, 25],
+        [15, 35, 0, 30],
+        [20, 25, 30, 0]]
+
+tour, length = ACO_TSP(dist)
+print("Best Tour:", tour)
+print("Shortest Distance:", length)                                                                                                                                                                 
